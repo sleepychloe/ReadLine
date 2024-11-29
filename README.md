@@ -1,5 +1,4 @@
 Tested on Linux (Bash)
-
 <br>
 
 ## Installation & Usage
