@@ -1,3 +1,18 @@
+Tested on Linux (Bash)
+
+<br>
+
+## Installation & Usage
+```
+	git clone https://github.com/sleepychloe/ReadLine.git
+	cd ReadLine
+	make
+	./readline
+```
+
+<br>
+
+
 ## Class ReadLine
 
 ### Introduction
