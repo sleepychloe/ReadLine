@@ -6,7 +6,7 @@
 /*   By: yhwang <yhwang@student.42.fr>              +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/28 16:40:38 by yhwang            #+#    #+#             */
-/*   Updated: 2024/11/30 19:30:43 by yhwang           ###   ########.fr       */
+/*   Updated: 2024/11/30 20:14:59 by yhwang           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -170,10 +170,8 @@ void	ReadLine::show_history(std::string &input, std::string arrow)
 		if (0 < this->_history_index)
 		{
 			this->_history_index--;
-
 			input = this->_history[this->_history_index];
 			this->_cursor = input.length();
-
 			update_display(input);
 		}
 	}
@@ -184,10 +182,14 @@ void	ReadLine::show_history(std::string &input, std::string arrow)
 			if (this->_history_index < this->_history.size() - 1)
 			{
 				this->_history_index++;
-
 				input = this->_history[this->_history_index];
 				this->_cursor = input.length();
-
+				update_display(input);
+			}
+			else if (this->_history_index == this->_history.size() - 1)
+			{
+				input = "";
+				this->_cursor = 0;
 				update_display(input);
 			}
 		}
