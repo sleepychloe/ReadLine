@@ -32,6 +32,9 @@ Features:
 3. Customizing terminal behavior for interactive programs
 	- implements manual backspace, delete, and cursor movement logic.
 	- allows real-time updates to terminal display.
+4. Input History navigation
+	- Provides easy navigation through input history using the up and down arrow keys
+	- remembers previous inputs during the program's runtime.
 
 
 usage example:
@@ -192,23 +195,23 @@ make it possible to:
 	- need to be processed manually by detecting `127` or `\b`, and removing the last character from the input buffer
 	```
 		/* removes the character at the cursor position */
-		void	ReadLine::handle_delete(std::string &input, size_t &cursor)
+		void	ReadLine::handle_delete(std::string &input)
 		{
-			if (!input.empty() && cursor < input.length())
-				input.erase(cursor, 1);
-			update_display(input, cursor);
+			if (!input.empty() && this->_cursor < input.length())
+				input.erase(this->_cursor, 1);
+			update_display(input);
 		}
 	```
 	```
 		/* removes the character before the cursor */
-		void	ReadLine::handle_backspace(std::string &input, size_t &cursor)
+		void	ReadLine::handle_backspace(std::string &input)
 		{
-			if (!input.empty() && 0 < cursor)
+			if (!input.empty() && 0 < this->_cursor)
 			{
-				input.erase(cursor - 1, 1);
-				cursor--;
+				input.erase(this->_cursor - 1, 1);
+				this->_cursor--;
 			}
-			update_display(input, cursor);
+			update_display(input);
 		}
 	```
 3. escape sequence handling
@@ -217,76 +220,50 @@ make it possible to:
 		+ special keys will not work
 		+ the terminal may behave unpredictably, waiting for sequences to complete or misinterpreting input.
 	```
-		int	ReadLine::is_escape_sequence(char c)
+		int	ReadLine::is_escape_sequence(std::string &input, char c)
 		{
-			char		seq;
+			int		i = 5;
 			std::string	escape_sequence(1, c);
-
-			std::unordered_set<std::string>	sequence({
-				/* arrow keys */
-				ESCAPE_UP_ARROW, ESCAPE_DOWN_ARROW, ESCAPE_RIGHT_ARROW, ESCAPE_LEFT_ARROW,
-
-				/* function keys */
-				ESCAPE_F1, ESCAPE_F2, ESCAPE_F3, ESCAPE_F4, ESCAPE_F5, ESCAPE_F6,
-				ESCAPE_F7, ESCAPE_F8, ESCAPE_F9, ESCAPE_F10, ESCAPE_F11, ESCAPE_F12,
-
-				/* navigation keys */
-				ESCAPE_INSERT, ESCAPE_DELETE, ESCAPE_HOME,
-				ESCAPE_END, ESCAPE_PAGE_UP, ESCAPE_PAGE_DOWN,
-
-				/* alt keys */
-				ESCAPE_ALT_A, ESCAPE_ALT_B, ESCAPE_ALT_C, ESCAPE_ALT_D, ESCAPE_ALT_E,
-				ESCAPE_ALT_F, ESCAPE_ALT_G, ESCAPE_ALT_H, ESCAPE_ALT_I, ESCAPE_ALT_J,
-				ESCAPE_ALT_K, ESCAPE_ALT_L, ESCAPE_ALT_M, ESCAPE_ALT_N, ESCAPE_ALT_O,
-				ESCAPE_ALT_P, ESCAPE_ALT_Q, ESCAPE_ALT_R, ESCAPE_ALT_S, ESCAPE_ALT_T,
-				ESCAPE_ALT_U, ESCAPE_ALT_V, ESCAPE_ALT_W, ESCAPE_ALT_X, ESCAPE_ALT_Y, ESCAPE_ALT_Z});
 
 			if (c != '\033')
 				return (NONE);
 
-			if (read(this->_fd, &seq, 1) == 1)
+			while (i > 0)
 			{
-				escape_sequence += std::string(1, seq);
-				if ('a' <= seq && seq <= 'z')
+				if (read(this->_fd, &c, 1) == -1)
 				{
-					/* alt keys */
-					if (sequence.find(escape_sequence) != sequence.end())
+					perror("read failed");
+					return (-1);
+				}
+				escape_sequence += std::string(1, c);
+
+				if ('a' <= c && c <= 'z')
+				{
+					if (this->_sequence.find(escape_sequence) != this->_sequence.end())
 						return (SEQUENCE_ALT);
+					return (UNRECOGNIZED_SEQUENCE);
 				}
-				else if (seq == '[' || seq == 'O')
+				if ('A' <= c && c <= 'D')
 				{
-					while (read(this->_fd, &seq, 1) == 1)
+					if (this->_sequence.find(escape_sequence) != this->_sequence.end())
 					{
-						escape_sequence += std::string(1, seq);
-						if ('A' <= seq && seq <= 'D')
-						{
-							/* arrow keys */
-							if (sequence.find(escape_sequence) != sequence.end())
-							{
-								input += escape_sequence;
-								return (SEQUENCE_ARROW);
-							}
-							/* unrecognized sequence */
-							break ;
-						}
-						if (seq == '~' || ('P' <= seq && seq <= 'S')
-							|| seq == 'H' || seq == 'F')
-						{
-							/* navigation key: delete */
-							if (escape_sequence == ESCAPE_DELETE)
-								return (SEQUENCE_DELETE);
-							/* function keys, navigation keys */
-							if (sequence.find(escape_sequence) != sequence.end())
-								return (SEQUENCE_FUNCTION_NAVIGATION);
-							/* unrecognized sequence */
-							break ;
-						}
-						/* unrecognized sequence */
-						if (seq == ';' || seq == '/')
-							break ;
-						
+						input += escape_sequence;
+						return (SEQUENCE_ARROW);
 					}
+					return (UNRECOGNIZED_SEQUENCE);
 				}
+				if (c == '~' || ('P' <= c && c <= 'S')
+					|| c == 'H' || c == 'F')
+				{
+					if (escape_sequence == ESCAPE_DELETE)
+						return (SEQUENCE_DELETE);
+					if (this->_sequence.find(escape_sequence) != this->_sequence.end())
+						return (SEQUENCE_FUNCTION_NAVIGATION);
+					return (UNRECOGNIZED_SEQUENCE);
+				}
+				if (c == ';' || c == '/')
+					break ;
+				i--;
 			}
 			return (UNRECOGNIZED_SEQUENCE);
 		}
