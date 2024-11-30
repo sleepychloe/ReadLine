@@ -96,7 +96,7 @@ make it possible to:
 
 <br>
 
-### Canoncial mode and Non-canonical mode
+### Canonical mode and Non-canonical mode
 
 - canonical mode(default)
 	+ input is line-buffered
@@ -105,7 +105,7 @@ make it possible to:
 
 - non-canonical mode
 	+ input is processed character-by-character
-	+ no need to press `Enter` for inpuyt to be available
+	+ no need to press `Enter` for input to be available
 	+ the program handles special keys(ex. backspace, arrow keys) directly
 
 <br>
@@ -156,7 +156,7 @@ make it possible to:
 
 <br>
 
-### How to disable non-canoncial mode
+### How to disable non-canonical mode
 
 ```
 	int	ReadLine::disable_raw_mode(void)
@@ -183,10 +183,10 @@ make it possible to:
 		#include <cstdlib>
 		atexit(disable_raw_mode);
 	```
-	- if not, terminal may rtemain in raw mode, causing unusual behavior like:
+	- if not, terminal may remain in raw mode, causing unusual behavior like:
 		+ characters not being echoed when typed
 		+ input being processed character-by-character instead of line-by-line
-		+ backspace andf enter not working as expected
+		+ backspace and enter not working as expected
 2. delete and backspace handling
 	- non-canonial mode doesn't handle backspace automatically
 	- need to be processed manually by detecting `127` or `\b`, and removing the last character from the input buffer
@@ -212,7 +212,7 @@ make it possible to:
 		}
 	```
 3. escape sequence handling
-	- in raw mode, the terminal sends raw input data directly to the program including multi-character escape sequence for special keys
+	- in raw mode, the terminal sends raw input data directly to the program including multi-character escape sequences for special keys
 	- without handling these sequences:
 		+ special keys will not work
 		+ the terminal may behave unpredictably, waiting for sequences to complete or misinterpreting input.
