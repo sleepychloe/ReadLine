@@ -277,8 +277,11 @@ int	ReadLine::read_line(std::string prompt, std::string &input)
 		}
 		else if (c == '\n')
 		{
-			this->_history.push_back(input);
-			this->_history_index = this->_history.size();
+			if (input != "")
+			{
+				this->_history.push_back(input);
+				this->_history_index = this->_history.size();
+			}
 			this->_cursor = 0;
 			break ;
 		}
